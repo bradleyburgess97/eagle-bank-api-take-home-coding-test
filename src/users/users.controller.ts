@@ -10,8 +10,9 @@ export class UsersController {
 
   @Post()
   @ApiOperation({ summary: 'Create a new user' })
-  @ApiResponse({ status: 201, description: 'The user has been successfully created.'})
-  @ApiResponse({ status: 400, description: 'Bad Request - required data missing or invalid.'})
+  @ApiResponse({ status: 201, description: 'User has been created successfully' })
+  @ApiResponse({ status: 400, description: 'Invalid details supplied' })
+  @ApiResponse({ status: 409, description: 'Email already exists' })
   create(@Body() createUserDto: CreateUserDto) {
     return this.usersService.create(createUserDto);
   }
