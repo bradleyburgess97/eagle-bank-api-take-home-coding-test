@@ -1,8 +1,8 @@
 {
-  "name": "nest-typescript-starter",
+  "name": "eagle-bank-api-take-home-coding-test",
   "private": true,
   "version": "1.0.0",
-  "description": "Nest TypeScript starter repository",
+  "description": "Eagle Bank API take home coding test.",
   "license": "MIT",
   "scripts": {
     "build": "nest build",
