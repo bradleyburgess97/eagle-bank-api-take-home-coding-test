@@ -7,10 +7,12 @@ import {
   JoinColumn,
   CreateDateColumn,
   UpdateDateColumn,
+  OneToMany,
 } from 'typeorm';
 import { Address } from './address.entity';
 import * as bcrypt from 'bcryptjs';
 import { ApiProperty } from '@nestjs/swagger';
+import { BankAccount } from 'src/accounts/account.entity';
 
 @Entity({ name: 'users' })
 export class User {
@@ -50,4 +52,7 @@ export class User {
   async hashPassword() {
     this.password = await bcrypt.hash(this.password, 10);
   }
+
+  @OneToMany(() => BankAccount, (account) => account.user, { cascade: true })
+  bankAccounts: BankAccount[];
 }
