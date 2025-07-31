@@ -7,11 +7,17 @@ import {
   UseGuards,
   ForbiddenException,
   NotFoundException,
-  ParseIntPipe,
+  BadRequestException,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
-import { ApiOperation, ApiResponse, ApiTags, ApiBearerAuth, ApiParam } from '@nestjs/swagger';
+import {
+  ApiOperation,
+  ApiResponse,
+  ApiTags,
+  ApiBearerAuth,
+  ApiParam,
+} from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
 import { User } from '../auth/user.decorator';
 import { User as UserEntity } from './user.entity';
@@ -23,7 +29,10 @@ export class UsersController {
 
   @Post()
   @ApiOperation({ summary: 'Create a new user' })
-  @ApiResponse({ status: 201, description: 'User has been created successfully' })
+  @ApiResponse({
+    status: 201,
+    description: 'User has been created successfully',
+  })
   @ApiResponse({ status: 400, description: 'Invalid details supplied' })
   @ApiResponse({ status: 409, description: 'Email already exists' })
   create(@Body() createUserDto: CreateUserDto) {
@@ -34,19 +43,37 @@ export class UsersController {
   @UseGuards(AuthGuard('jwt'))
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Fetch user details by ID' })
-  @ApiParam({ name: 'userId', type: Number, description: 'ID of the user to fetch' })
-  @ApiResponse({ status: 200, description: 'User details returned successfully', type: UserEntity })
-  @ApiResponse({ status: 403, description: 'Forbidden - cannot access other users\' details' })
-  @ApiResponse({ status: 404, description: 'User not found' })
+  @ApiParam({
+    name: 'userId',
+    type: String,
+    description: 'ID of the user',
+  })
+  @ApiResponse({
+    status: 200,
+    type: UserEntity,
+  })
+  @ApiResponse({ status: 400, description: "The request didn't supply all the necessary data" })
+  @ApiResponse({ status: 401, description: 'Access token is missing or invalid' })
+  @ApiResponse({
+    status: 403,
+    description: "The user is not allowed to access the transaction",
+  })
+  @ApiResponse({ status: 404, description: 'User was not found' })
   async getUser(
-    @Param('userId', ParseIntPipe) userId: number,
+    @Param('userId') userId: string,
     @User() authenticatedUser: UserEntity,
   ) {
-    if (authenticatedUser.id !== userId) {
+    const parsedId = Number(userId);
+
+    if (isNaN(parsedId)) {
+      throw new BadRequestException('Invalid user ID');
+    }
+
+    if (authenticatedUser.id !== parsedId) {
       throw new ForbiddenException('You can only access your own user details');
     }
 
-    const user = await this.usersService.findOneById(userId);
+    const user = await this.usersService.findOneById(parsedId);
     if (!user) {
       throw new NotFoundException('User not found');
     }
