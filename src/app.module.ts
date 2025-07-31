@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { UsersModule } from './users/users.module';
+import { AuthModule } from './auth/auth.module';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { User } from './users/user.entity';
@@ -25,6 +26,7 @@ import { Address } from './users/address.entity';
       }),
     }),
     UsersModule,
+    AuthModule
   ],
   controllers: [],
   providers: [],
