@@ -1,9 +1,20 @@
-import { Controller, Post, Body, Get, Param, UseGuards, Req, ForbiddenException, NotFoundException } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Body,
+  Get,
+  Param,
+  UseGuards,
+  ForbiddenException,
+  NotFoundException,
+  ParseIntPipe,
+} from '@nestjs/common';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
-import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { ApiOperation, ApiResponse, ApiTags, ApiBearerAuth, ApiParam } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
-import { Request } from 'express';
+import { User } from '../auth/user.decorator';
+import { User as UserEntity } from './user.entity';
 
 @ApiTags('Users')
 @Controller('v1/users')
@@ -21,14 +32,21 @@ export class UsersController {
 
   @Get(':userId')
   @UseGuards(AuthGuard('jwt'))
-  async getUser(@Param('userId') userId: string, @Req() req: Request) {
-    const authenticatedUser = req.user as any;
-
-    if (authenticatedUser.id !== Number(userId)) {
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Fetch user details by ID' })
+  @ApiParam({ name: 'userId', type: Number, description: 'ID of the user to fetch' })
+  @ApiResponse({ status: 200, description: 'User details returned successfully', type: UserEntity })
+  @ApiResponse({ status: 403, description: 'Forbidden - cannot access other users\' details' })
+  @ApiResponse({ status: 404, description: 'User not found' })
+  async getUser(
+    @Param('userId', ParseIntPipe) userId: number,
+    @User() authenticatedUser: UserEntity,
+  ) {
+    if (authenticatedUser.id !== userId) {
       throw new ForbiddenException('You can only access your own user details');
     }
 
-    const user = await this.usersService.findOneById(Number(userId));
+    const user = await this.usersService.findOneById(userId);
     if (!user) {
       throw new NotFoundException('User not found');
     }
