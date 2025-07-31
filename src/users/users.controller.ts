@@ -70,7 +70,7 @@ export class UsersController {
     }
 
     if (authenticatedUser.id !== parsedId) {
-      throw new ForbiddenException('You can only access your own user details');
+      throw new ForbiddenException('The user is not allowed to access the transaction');
     }
 
     const user = await this.usersService.findOneById(parsedId);
